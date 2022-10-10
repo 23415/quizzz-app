@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/ques.dart';
 import './question.dart';
 import './answer.dart';
+import 'apimanager.dart';
 
 void main() => runApp(MyApp());
 
@@ -22,60 +24,44 @@ class MyAppState extends State<MyApp> {
     print(_questionsIndex);
   }
 
+  final manager = ApiManager();
+
   @override
   Widget build(BuildContext context) {
-    var _questions = [
-      {
-        'questionstext': 'what\s your favourite color?',
-        'answer': ['black', 'blue', 'white', 'yellow'],
-      },
-      {
-        'questionstext': 'what\s your favourite animal?',
-        'answer': ['cat', 'dog', 'tiger', 'lion'],
-      },
-      {
-        'questionstext': 'what\s your favourite food?',
-        'answer': ['chicken', 'momos', 'burger', 'pizza'],
-      },
-      {
-        'questionstext': 'what\s your favourite place?',
-        'answer': ['delhi', 'mumbai', 'bangalore', 'chennai'],
-      },
-      {
-        'questionstext': 'what\s your favourite actor?',
-        'answer': ['salman khan', 'jr ntr', 'allu arjun', 'akshay kumar'],
-      }
-    ];
-
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.deepPurple,
-          leading: Icon(Icons.arrow_back),
-          title: Text('quiz app'),
-        ),
-        body: Column(
-          children: [
-            Question(
-              (_questions[_questionsIndex]['questionstext'] as String),
-            ),
-            ...(_questions[_questionsIndex]['answer'] as List<String>)
-                .map((answer) {
-              return Answer(answer);
-            }).toList(),
-            SizedBox(
-              height: 50,
-            ),
-            ElevatedButton(
-              onPressed: _answerquestion,
-              child: Text("Next"),
-              style: ElevatedButton.styleFrom(
-                  primary: Colors.deepPurple, elevation: 5),
-            )
-          ],
-        ),
-      ),
-    );
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.deepPurple,
+            leading: Icon(Icons.arrow_back),
+            title: Text('quiz app'),
+          ),
+          body: FutureBuilder<List<ques>>(
+            future: manager.getques(),
+            builder: (context, AsyncSnapshot<List<ques>> snapshot) {
+              if (snapshot.hasData) {
+                List<ques> data = snapshot.data!;
+                return Center(
+                    child: ListView.builder(
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(data[index].question),
+                      subtitle: Text(data[index].correct_answer),
+                      trailing: Text(data[index].incorrect_answers),
+                      leading: ElevatedButton(
+                        onPressed: _answerquestion,
+                        child: Text("Next"),
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.deepPurple, elevation: 5),
+                      ),
+                    );
+                  },
+                  itemCount: data.length,
+                ));
+              } else
+                return Center(child: CircularProgressIndicator());
+            },
+          ),
+        ));
   }
 }
